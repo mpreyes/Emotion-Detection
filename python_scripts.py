@@ -98,7 +98,7 @@ def main():
 
 #     model.add(Conv2D(32, (3, 3), input_shape=( 64, 64,3)))
 
-    model.add(Dense(units=1, activation='softmax'))
+    ßmodel.add(Dense(units=1, activation='softmax'))
     model.compile(loss='categorical_crossentropy',
             optimizer='sgd',
             metrics=['accuracy'])
