@@ -10,6 +10,7 @@ from keras.preprocessing.image import ImageDataGenerator, array_to_img, img_to_a
 from keras.applications.vgg16 import VGG16
 from keras.preprocessing import image
 from keras.applications.vgg16 import preprocess_input
+from keras.utils.np_utils import to_categorical
 
 #create dictionary with filepath, label
 #training data -> labeled
@@ -42,7 +43,7 @@ def getLabels(rootdir,extension): #grabbing labels from labels folder
     labels = []
     for root, dirs, files, in os.walk(rootdir):
         if len(files) == 0:
-            labels.append("no label")
+            labels.append(-1) #meaning no label was assigned for this sequence of images 
         for f in files:
             if f.endswith(extension) and not f.startswith("."):
                 f = open(os.path.join(root,f),"r")
@@ -52,72 +53,48 @@ def getLabels(rootdir,extension): #grabbing labels from labels folder
 
 
 def resizeImages(img_files,x,y):
-        #datagen = ImageDataGenerator(target_size=(64,64))
-        for i in range(len(img_files)):
-            new_im = cv2.imread(img_files[i][1]) #replacing img paths with resized matrix 
-            #k_img = img_to_array(img_files[i][1]) 
-            #print("kmg " + k_img)
-            res = cv2.resize(new_im,dsize=(64,64))
-            #res = res[...,::-1]
-            #k_img = img_to_array(res) 
-            #img_files[i][1] = res
-            x.append(res)
+        for i in range(1,15): #len(img_files)
+            img = image.load_img(img_files[i][1], target_size=(64, 64))
+            resized_img = image.img_to_array(img)
+            x.append(resized_img)
             y.append(img_files[i][0])
-        return img_files
-        
-    
-def main():
-    imgs_dir = "other_images/cohn-kanade-images/"
-    labels_dir = "other_images/Emotion/"
-    x = [] #inputs (images)
-    y = [] #labels 
-    # labels = getLabels(labels_dir,".txt")
-    # img_files = traverseFolders(imgs_dir,".png",labels)
-    # resized_images = resizeImages(img_files,x,y)
-    img_path = 'other_images/cohn-kanade-images/S999/003/S999_003_00000055.png'
-    img = image.load_img(img_path, target_size=(64, 64))
-    img2 = image.img_to_array(img)
-    #x = preprocess_input(x)
-    x.append(np.asarray(img2))
-    y.append(np.asarray(1))
-    #y = to_categorical(y, 7).astype(np.float32)
-    x = np.asarray(x)
-    y = np.asarray(y)
-    print(np.shape(x))
-    print(np.shape(y))
 
+
+
+def sequentialModel():
     model = Sequential()
     model.add(Dense(units=64, activation='relu',input_shape=(64, 64, 3)))
-    
-
-# #     model = Sequential([
-# #     Flatten(input_shape=(64, 64,3)),
-# #     Dense(128, activation='softmax'),
-# #     #layers.Dense(10, activation=tf.nn.softmax)
-# # ])
-
-#     model.add(Conv2D(32, (3, 3), input_shape=( 64, 64,3)))
-
-    ßmodel.add(Dense(units=1, activation='softmax'))
+    model.add(Dense(units=7, activation='softmax'))
     model.compile(loss='categorical_crossentropy',
             optimizer='sgd',
             metrics=['accuracy'])
+    return model
 
-    model.fit(x, y, epochs=5, batch_size=32)
 
-    # model = VGG16(weights='imagenet', include_top=False)
-   
+
+
     
+def main():
+    imgs_dir = "../subset_images/cohn-kanade-images/"
+    labels_dir = "../subset_images/Emotion/"
+    x = [] #inputs (images)
+    y = [] #labels 
+    labels = getLabels(labels_dir,".txt")
+    img_files = traverseFolders(imgs_dir,".png",labels)
+    resizeImages(img_files,x,y)
+    #x = preprocess_input(x)
+    inputs = np.asarray(x)
+    labels = np.asarray(y)
+    labels = to_categorical(labels)
+    #print("to cat " + str(labels))
+    labels = np.expand_dims(labels, axis=0)
+    labels = np.expand_dims(labels, axis=1)
+    print(np.shape(inputs))
+    print(np.shape(labels))
+    seq_model = sequentialModel()
 
-    # #features = model.predict(x)
-    # x = np.expand_dims(x, axis=0)
- 
-
-    # p =  model.fit(x, y, epochs=5, batch_size=32)
-
-    # //print('features: ', features)
-            
-
+    seq_model.fit(inputs, labels, epochs=5, batch_size=32)
+    
 
 
 main()
