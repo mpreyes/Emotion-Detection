@@ -7,10 +7,13 @@ import glob
 from keras.models import Sequential
 from keras.layers import Dense, Conv2D, MaxPooling2D, Flatten, Reshape
 from keras.preprocessing.image import ImageDataGenerator, array_to_img, img_to_array, load_img
-from keras.applications.vgg16 import VGG16
+from keras.applications.vgg16 import VGG16, preprocess_input, decode_predictions
 from keras.preprocessing import image
-from keras.applications.vgg16 import preprocess_input
 from keras.utils.np_utils import to_categorical
+from keras.applications.resnet50 import ResNet50
+from keras.applications.vgg19 import VGG19
+from keras.models import Model
+
 
 #create dictionary with filepath, label
 #training data -> labeled
@@ -44,8 +47,6 @@ def traverseFolders(rootdir,extension,labels):
                    
         files_seq += 1
 
-    print("test " + str(len(test_data)))
-    print("label " + str(len(labeled_data)))
     return labeled_data, test_data
         
 
@@ -64,8 +65,8 @@ def getLabels(rootdir,extension): #grabbing labels from labels folder
 
 def resizeImages(img_files,x,y):
         for i in range(len(img_files)): 
-            img = image.load_img(img_files[i][1], target_size=(64, 64))
-            resized_img = image.img_to_array(img) 
+            img = image.load_img(img_files[i][1], target_size=(224, 224))
+            resized_img = image.img_to_array(img) #numpy array
             x.append(resized_img)
             y.append(img_files[i][0])
         
@@ -81,40 +82,55 @@ def inputDataSummary(inputs,labels):
 
 def sequentialModel():
     model = Sequential()
-    model.add(Flatten(input_shape=(64, 64, 3)))
-    model.add(Dense(units=64, activation='relu'))
+    model.add(Flatten(input_shape=(224, 224, 3)))
+    model.add(Dense(units=224, activation='relu'))
     model.add(Dense(units=8, activation='softmax')) 
     model.compile(loss='categorical_crossentropy', optimizer='sgd', metrics=['accuracy'])
     
     return model
 
 #increase img size 224 * 224, scale and divide by 256
+
+#TODO: fix this boi
 def conv2DModel():
     model = Sequential()
-    model.add(Conv2D(64, kernel_size=(5, 5), strides=(1, 1), activation='relu',data_format = "channels_last",input_shape=(64, 64, 3)))
+    model.add(Conv2D(224, kernel_size=(5, 5), strides=(1, 1), activation='relu',data_format = "channels_last",input_shape=(224, 224, 3)))
     model.add(MaxPooling2D(pool_size=(2, 2), strides=(2, 2)))
-    model.add(Conv2D(64, (5, 5), activation='relu'))
+    model.add(Conv2D(224, (5, 5), activation='relu'))
     model.add(MaxPooling2D(pool_size=(2, 2)))
     model.add(Flatten())
-    model.add(Dense(64, activation='relu'))
+    model.add(Dense(224, activation='relu'))
     model.add(Dense(8, activation='softmax'))
     model.compile(loss='categorical_crossentropy', optimizer='sgd', metrics=['accuracy'])
     return model
 
+
 def runModel(model, inputs, labels):
-    model.fit(inputs, labels, epochs=30, batch_size=32) #TODO: set to 500
+    model.fit(inputs, labels, epochs=5, batch_size=32) #TODO: set to 500
     model.summary()
     score = model.evaluate(inputs, labels, verbose=0)
     print('Test loss:', score[0])
     print('Test accuracy:', score[1])
+    prediction = model.predict(inputs)
+    print('Predicted:', decode_predictions(prediction, top=3)[0])
+
+
+def notMyModel(model,inputs,labels):
+    newModel = Sequential()
+    newModel.add(model)
+    newModel.add(Flatten(input_shape=(224, 224, 3)))
+    newModel.add(Dense(224, activation='relu'))
+    newModel.add(Dense(8, activation='softmax'))
+    newModel.compile(loss='categorical_crossentropy', optimizer='sgd', metrics=['accuracy'])
+    runModel(newModel,inputs,labels)
 
 
 
 def main():
-    imgs_dir = "../inputs/cohn-kanade-images/"
-    labels_dir = "../inputs/Emotion/"
-    # imgs_dir = "../subset_images/cohn-kanade-images/"
-    # labels_dir = "../subset_images/Emotion/"
+    # imgs_dir = "../inputs/cohn-kanade-images/"
+    # labels_dir = "../inputs/Emotion/"
+    imgs_dir = "../subset_images/cohn-kanade-images/"
+    labels_dir = "../subset_images/Emotion/"
     x = [] #inputs (images)
     y = [] #labels 
     labels = getLabels(labels_dir,".txt")
@@ -127,16 +143,38 @@ def main():
     labels = np.asarray(y)
     labels = to_categorical(labels)
     inputDataSummary(x,y)
-    conv2D = conv2DModel()
-    #vgg16model = VGG16()
+    #conv2D = conv2DModel()
+    vgg16Model = VGG16(weights="imagenet",include_top=False,input_shape=(224,224,3))
+    resNetModel = ResNet50(weights="imagenet",include_top=False,input_shape=(224,224,3))
+    vgg19Model = VGG19(weights="imagenet",include_top=False,input_shape=(224,224,3))
+
+    notMyModel(resNetModel,inputs,labels)
+
+
+
+    # last = vgg16Model.output
+    # x = Flatten()(last)
+    # #preds = model.add(Dense(units=8, activation='softmax')) 
+
+    # x = Dense(224, activation='relu')(x)
+    # preds = Dense(8, activation='softmax')(x)
+    # model = Model(inputs=vgg16Model.input, outputs=preds)
+    #print(last)
+    
 
     #runModel(conv2D,inputs,labels)
+    # print('test me')
+    # print(model.summary())
+    #prediction = newModel.predict(inputs)
+    # label =  decode_predictions(prediction)
+    # label = label[0][0]
+    #print('Predicted:', decode_predictions(prediction, top=3)[0])
+    #print('%s (%.2f%%)' % (label[1], label[2]*100))
+
     #runModel(vgg16model,inputs,labels)
-
     
-    # print(vgg16model.summary())
 
-    #print("prediction" + conv2D.predict(np.array(x[0])))
+    #print("prediction" + new.predict(np.array(x[0])))
     
 
 
