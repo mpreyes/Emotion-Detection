@@ -13,6 +13,7 @@ from keras.utils.np_utils import to_categorical
 from keras.applications.resnet50 import ResNet50
 from keras.applications.vgg19 import VGG19
 from keras.models import Model
+from keras.models import model_from_json
 
 
 #create dictionary with filepath, label
@@ -105,14 +106,61 @@ def conv2DModel():
     return model
 
 
+def getEmotion(emotion):
+    if emotion == 0:
+        return "neutral"
+    elif emotion == 1:
+        return "anger"
+    elif emotion == 2:
+        return "contempt"
+    elif emotion == 3:
+        return "disgust"
+    elif emotion == 4:
+        return "fear"
+    elif emotion == 5:
+        return "happy"
+    elif emotion == 6:
+        return "sadness"
+    elif emotion == 7:
+        return "surprise"
+
+def saveModel(model_json, model):
+    with open("model.json","w") as json_file:
+        json_file.write(model_json)  
+    model.save_weights("model.h5")
+    print("saving model...")
+
+def loadModel(inputs, labels):
+    json_file = open("model.json","r")
+    loaded_model_json = json_file.read()
+    json_file.close()
+    loaded_model = model_from_json(loaded_model_json)
+    loaded_model.load_weights("model.h5")
+    print("loading model and recompiling...")
+    loaded_model.compile(loss='binary_crossentropy', optimizer='rmsprop', metrics=['accuracy'])
+    score = loaded_model.evaluate(inputs, labels, verbose=0)
+    print("%s: %.2f%%" % (loaded_model.metrics_names[1], score[1]*100))
+
+
+
 def runModel(model, inputs, labels):
-    model.fit(inputs, labels, epochs=5, batch_size=32) #TODO: set to 500
+    model.fit(inputs, labels, epochs=1, batch_size=32) #TODO: set to 500
     model.summary()
     score = model.evaluate(inputs, labels, verbose=0)
     print('Test loss:', score[0])
     print('Test accuracy:', score[1])
-    prediction = model.predict(inputs)
-    print('Predicted:', decode_predictions(prediction, top=3)[0])
+
+    probs = model.predict(inputs)
+    y_classes = probs.argmax(axis=-1)
+    print(y_classes)
+    #class_labels = [0,1,2,3,4,5,6,7,8]
+    #spred = model.argmax(class_labels, axis=-1)
+    #print(class_labels[pred[0]])
+    print(model.predict_classes(inputs,verbose=0))
+
+
+
+
 
 
 def notMyModel(model,inputs,labels):
@@ -122,7 +170,13 @@ def notMyModel(model,inputs,labels):
     newModel.add(Dense(224, activation='relu'))
     newModel.add(Dense(8, activation='softmax'))
     newModel.compile(loss='categorical_crossentropy', optimizer='sgd', metrics=['accuracy'])
-    runModel(newModel,inputs,labels)
+    
+    #run and save model 
+    runModel(newModel,inputs,labels) 
+    model_json = newModel.to_json()
+    saveModel(model_json,newModel)
+
+    loadModel(inputs,labels)
 
 
 
@@ -145,10 +199,10 @@ def main():
     inputDataSummary(x,y)
     #conv2D = conv2DModel()
     vgg16Model = VGG16(weights="imagenet",include_top=False,input_shape=(224,224,3))
-    resNetModel = ResNet50(weights="imagenet",include_top=False,input_shape=(224,224,3))
-    vgg19Model = VGG19(weights="imagenet",include_top=False,input_shape=(224,224,3))
+    #resNetModel = ResNet50(weights="imagenet",include_top=False,input_shape=(224,224,3))
+    #vgg19Model = VGG19(weights="imagenet",include_top=False,input_shape=(224,224,3))
 
-    notMyModel(resNetModel,inputs,labels)
+    notMyModel(vgg16Model,inputs,labels)
 
 
 
