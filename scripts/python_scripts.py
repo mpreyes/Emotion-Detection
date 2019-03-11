@@ -144,7 +144,7 @@ def loadModel(model_name,model_weights, inputs, labels):
 
 
 def runModel(model, inputs, labels):
-    model.fit(inputs, labels, epochs=1, batch_size=32) #TODO: set to 500
+    model.fit(inputs, labels, epochs=1, batch_size=32, shuffle=True) #TODO: set to 500
     model.summary()
     score = model.evaluate(inputs, labels, verbose=0)
     print('Test loss:', score[0])
