@@ -146,7 +146,7 @@ def loadModel(model_name,model_weights, inputs, labels):
 
 
 def runModel(model, inputs, labels, test_data):
-    model.fit(inputs, labels, epochs=200, batch_size=32, shuffle=True) #TODO: set to 500
+    model.fit(inputs, labels, epochs=500, batch_size=32, shuffle=True) #TODO: set to 500
     model.summary()
     score = model.evaluate(inputs, labels, verbose=0)
     print('Test loss:', score[0])
@@ -180,10 +180,10 @@ def notMyModel(model,inputs,labels,test_data):
 
 
 def main():
-    # imgs_dir = "../inputs/cohn-kanade-images/"
-    # labels_dir = "../inputs/Emotion/"
-    imgs_dir = "../subset_images/cohn-kanade-images/"
-    labels_dir = "../subset_images/Emotion/"
+    imgs_dir = "../inputs/cohn-kanade-images/"
+    labels_dir = "../inputs/Emotion/"
+    #imgs_dir = "../subset_images/cohn-kanade-images/"
+    #labels_dir = "../subset_images/Emotion/"
     x = [] #inputs (images)
     y = [] #labels 
     labels = getLabels(labels_dir,".txt")
