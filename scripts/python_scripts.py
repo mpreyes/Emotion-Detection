@@ -146,7 +146,7 @@ def loadModel(model_name,model_weights, inputs, labels):
 
 
 def runModel(model, inputs, labels, test_data):
-    model.fit(inputs, labels, epochs=1, batch_size=32, shuffle=True) #TODO: set to 500
+    model.fit(inputs, labels, epochs=200, batch_size=32, shuffle=True) #TODO: set to 500
     model.summary()
     score = model.evaluate(inputs, labels, verbose=0)
     print('Test loss:', score[0])
@@ -158,7 +158,7 @@ def runModel(model, inputs, labels, test_data):
     #class_labels = [0,1,2,3,4,5,6,7,8]
     #spred = model.argmax(class_labels, axis=-1)
     #print(class_labels[pred[0]])
-    print(model.predict_classes(test_data,verbose=0))
+    print(model.predict_classes(inputs,verbose=0))
 
 
 
@@ -196,15 +196,16 @@ def main():
     print(len(labeled_data) +  len(test_data))
 
     inputs = np.asarray(x) / float(255)
+    #test_data = np.asarray(test_data) / float(255)
     labels = np.asarray(y)
     labels = to_categorical(labels)
     inputDataSummary(x,y)
     #conv2D = conv2DModel()
-    #vgg16Model = VGG16(weights="imagenet",include_top=False,input_shape=(224,224,3))
+    vgg16Model = VGG16(weights="imagenet",include_top=False,input_shape=(224,224,3))
     #resNetModel = ResNet50(weights="imagenet",include_top=False,input_shape=(224,224,3))
     vgg19Model = VGG19(weights="imagenet",include_top=False,input_shape=(224,224,3))
 
-    notMyModel(vgg19Model,inputs,labels,test_data)
+    notMyModel(vgg16Model,inputs,labels,test_data)
 
 
 
