@@ -1,4 +1,5 @@
 ._.DS_Store
 /original_files/
-/inputs/
 .vscode
+/inputs/FACS/
+/inputs/Landmarks/
