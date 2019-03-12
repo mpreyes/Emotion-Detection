@@ -124,46 +124,48 @@ def getEmotion(emotion):
     elif emotion == 7:
         return "surprise"
 
-def saveModel(model_json, model):
-    with open("model.json","w") as json_file:
+def saveModel(model_name,model_weights,model_json, model):
+    with open(model_name,"w") as json_file:
         json_file.write(model_json)  
-    model.save_weights("model.h5")
+    model.save_weights(model_weights)
     print("saving model...")
 
-def loadModel(inputs, labels):
-    json_file = open("model.json","r")
+def loadModel(model_name,model_weights, inputs, labels):
+    json_file = open(model_name,"r")
     loaded_model_json = json_file.read()
     json_file.close()
     loaded_model = model_from_json(loaded_model_json)
-    loaded_model.load_weights("model.h5")
+    loaded_model.load_weights(model_weights)
     print("loading model and recompiling...")
     loaded_model.compile(loss='binary_crossentropy', optimizer='rmsprop', metrics=['accuracy'])
     score = loaded_model.evaluate(inputs, labels, verbose=0)
     print("%s: %.2f%%" % (loaded_model.metrics_names[1], score[1]*100))
+    print('Test loss:', score[0])
+    print('Test accuracy:', score[1])
 
 
 
-def runModel(model, inputs, labels):
-    model.fit(inputs, labels, epochs=1, batch_size=32) #TODO: set to 500
+def runModel(model, inputs, labels, test_data):
+    model.fit(inputs, labels, epochs=1, batch_size=32, shuffle=True) #TODO: set to 500
     model.summary()
     score = model.evaluate(inputs, labels, verbose=0)
     print('Test loss:', score[0])
     print('Test accuracy:', score[1])
 
-    probs = model.predict(inputs)
-    y_classes = probs.argmax(axis=-1)
-    print(y_classes)
+    #probs = model.predict(inputs)
+    #y_classes = probs.argmax(axis=-1)
+    #print(y_classes)
     #class_labels = [0,1,2,3,4,5,6,7,8]
     #spred = model.argmax(class_labels, axis=-1)
     #print(class_labels[pred[0]])
-    print(model.predict_classes(inputs,verbose=0))
+    print(model.predict_classes(test_data,verbose=0))
 
 
 
 
 
 
-def notMyModel(model,inputs,labels):
+def notMyModel(model,inputs,labels,test_data):
     newModel = Sequential()
     newModel.add(model)
     newModel.add(Flatten(input_shape=(224, 224, 3)))
@@ -172,11 +174,11 @@ def notMyModel(model,inputs,labels):
     newModel.compile(loss='categorical_crossentropy', optimizer='sgd', metrics=['accuracy'])
     
     #run and save model 
-    runModel(newModel,inputs,labels) 
+    runModel(newModel,inputs,labels,test_data) 
     model_json = newModel.to_json()
-    saveModel(model_json,newModel)
+    saveModel("model.json","model.h5",model_json,newModel)
 
-    loadModel(inputs,labels)
+    loadModel("model.json","model.h5",inputs,labels)
 
 
 
@@ -198,11 +200,11 @@ def main():
     labels = to_categorical(labels)
     inputDataSummary(x,y)
     #conv2D = conv2DModel()
-    vgg16Model = VGG16(weights="imagenet",include_top=False,input_shape=(224,224,3))
+    #vgg16Model = VGG16(weights="imagenet",include_top=False,input_shape=(224,224,3))
     #resNetModel = ResNet50(weights="imagenet",include_top=False,input_shape=(224,224,3))
-    #vgg19Model = VGG19(weights="imagenet",include_top=False,input_shape=(224,224,3))
+    vgg19Model = VGG19(weights="imagenet",include_top=False,input_shape=(224,224,3))
 
-    notMyModel(vgg16Model,inputs,labels)
+    notMyModel(vgg19Model,inputs,labels,test_data)
 
 
 
