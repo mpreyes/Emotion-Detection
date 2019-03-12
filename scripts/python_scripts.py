@@ -162,9 +162,6 @@ def runModel(model, inputs, labels, test_data):
 
 
 
-
-
-
 def notMyModel(model,inputs,labels,test_data):
     newModel = Sequential()
     newModel.add(model)

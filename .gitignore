@@ -1,4 +1,10 @@
 ._.DS_Store
 /original_files/
-/inputs/
 .vscode
+/inputs/FACS/
+/inputs/Landmarks/
+/inputs/._Emotion
+/inputs/._cohn-kanade-images
+/inputs/._FACS
+/inputs/._Landmarks
+._.*
