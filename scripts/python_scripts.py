@@ -93,12 +93,15 @@ def sequentialModel():
 #increase img size 224 * 224, scale and divide by 256
 
 #TODO: fix this boi
-def conv2DModel():
+def conv2DModel(): #add dropout layers, 
     model = Sequential()
     model.add(Conv2D(224, kernel_size=(5, 5), strides=(1, 1), activation='relu',data_format = "channels_last",input_shape=(224, 224, 3)))
     model.add(MaxPooling2D(pool_size=(2, 2), strides=(2, 2)))
     model.add(Conv2D(224, (5, 5), activation='relu'))
     model.add(MaxPooling2D(pool_size=(2, 2)))
+    
+    
+    
     model.add(Flatten())
     model.add(Dense(224, activation='relu'))
     model.add(Dense(8, activation='softmax'))
@@ -199,7 +202,7 @@ def main():
     inputDataSummary(x,y)
     #conv2D = conv2DModel()
     vgg16Model = VGG16(weights="imagenet",include_top=False,input_shape=(224,224,3))
-    #resNetModel = ResNet50(weights="imagenet",include_top=False,input_shape=(224,224,3))
+    resNetModel = ResNet50(weights="imagenet",include_top=False,input_shape=(224,224,3))
     vgg19Model = VGG19(weights="imagenet",include_top=False,input_shape=(224,224,3))
 
     notMyModel(vgg16Model,inputs,labels,test_data)
