@@ -8,6 +8,7 @@ from keras.models import Sequential
 from keras.layers import Dense, Conv2D, MaxPooling2D, Flatten, Reshape
 from keras.preprocessing.image import ImageDataGenerator, array_to_img, img_to_array, load_img
 from keras.applications.vgg16 import VGG16, preprocess_input, decode_predictions
+from keras.callbacks import ModelCheckpoint
 from keras.preprocessing import image
 from keras.utils.np_utils import to_categorical
 from keras.applications.resnet50 import ResNet50
@@ -146,7 +147,11 @@ def loadModel(model_name,model_weights, inputs, labels):
 
 
 def runModel(model, inputs, labels, test_data):
-    model.fit(inputs, labels, epochs=1, batch_size=32, shuffle=True) #TODO: set to 500
+    print(str(model))
+    filepath="saved/weights-improvement-{epoch:02d}-{val_acc:.2f}.hdf5"
+    checkpoint = ModelCheckpoint(filepath, monitor='val_acc', verbose=1, save_best_only=True, mode='max')
+    callbacks_list = [checkpoint]
+    model.fit(inputs, labels, epochs=1, batch_size=32, shuffle=True, callbacks=) #TODO: set to 500
     model.summary()
     score = model.evaluate(inputs, labels, verbose=0)
     print('Test loss:', score[0])
