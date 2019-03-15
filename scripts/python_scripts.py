@@ -8,6 +8,7 @@ from keras.models import Sequential
 from keras.layers import Dense, Conv2D, MaxPooling2D, Flatten, Reshape
 from keras.preprocessing.image import ImageDataGenerator, array_to_img, img_to_array, load_img
 from keras.applications.vgg16 import VGG16, preprocess_input, decode_predictions
+from keras.callbacks import ModelCheckpoint
 from keras.preprocessing import image
 from keras.utils.np_utils import to_categorical
 from keras.applications.resnet50 import ResNet50
@@ -127,18 +128,19 @@ def getEmotion(emotion):
     elif emotion == 7:
         return "surprise"
 
-def saveModel(model_name,model_weights,model_json, model):
-    with open(model_name,"w") as json_file:
+def saveModel(model,model_name):
+    model_json = model.to_json()
+    with open(model_name + ".json","w") as json_file:
         json_file.write(model_json)  
-    model.save_weights(model_weights)
+    model.save_weights(model_name + ".h5")
     print("saving model...")
 
-def loadModel(model_name,model_weights, inputs, labels):
-    json_file = open(model_name,"r")
+def loadModel(model_name, inputs, labels):
+    json_file = open(model_name + ".json","r")
     loaded_model_json = json_file.read()
     json_file.close()
     loaded_model = model_from_json(loaded_model_json)
-    loaded_model.load_weights(model_weights)
+    loaded_model.load_weights(model_name + ".h5")
     print("loading model and recompiling...")
     loaded_model.compile(loss='binary_crossentropy', optimizer='rmsprop', metrics=['accuracy'])
     score = loaded_model.evaluate(inputs, labels, verbose=0)
@@ -149,7 +151,11 @@ def loadModel(model_name,model_weights, inputs, labels):
 
 
 def runModel(model, inputs, labels, test_data):
-    model.fit(inputs, labels, epochs=500, batch_size=32, shuffle=True) #TODO: set to 500
+
+    filepath="../saved/weights-improvement-{epoch:02d}.hdf5"
+    checkpoint = ModelCheckpoint(filepath, verbose=1,period=1)
+    callbacks_list = [checkpoint]
+    model.fit(inputs, labels, epochs=1, batch_size=32, shuffle=True, callbacks=callbacks_list) #TODO: set to 500
     model.summary()
     score = model.evaluate(inputs, labels, verbose=0)
     print('Test loss:', score[0])
@@ -173,20 +179,16 @@ def notMyModel(model,inputs,labels,test_data):
     newModel.add(Dense(8, activation='softmax'))
     newModel.compile(loss='categorical_crossentropy', optimizer='sgd', metrics=['accuracy'])
     
-    #run and save model 
-    runModel(newModel,inputs,labels,test_data) 
-    model_json = newModel.to_json()
-    saveModel("model.json","model.h5",model_json,newModel)
-
-    loadModel("model.json","model.h5",inputs,labels)
+    return newModel
+   
 
 
 
 def main():
-    imgs_dir = "../inputs/cohn-kanade-images/"
-    labels_dir = "../inputs/Emotion/"
-    #imgs_dir = "../subset_images/cohn-kanade-images/"
-    #labels_dir = "../subset_images/Emotion/"
+    # imgs_dir = "../inputs/cohn-kanade-images/"
+    # labels_dir = "../inputs/Emotion/"
+    imgs_dir = "../subset_images/cohn-kanade-images/"
+    labels_dir = "../subset_images/Emotion/"
     x = [] #inputs (images)
     y = [] #labels 
     labels = getLabels(labels_dir,".txt")
@@ -200,39 +202,33 @@ def main():
     labels = np.asarray(y)
     labels = to_categorical(labels)
     inputDataSummary(x,y)
-    #conv2D = conv2DModel()
+
+
+    conv2D = conv2DModel()
     vgg16Model = VGG16(weights="imagenet",include_top=False,input_shape=(224,224,3))
     resNetModel = ResNet50(weights="imagenet",include_top=False,input_shape=(224,224,3))
     vgg19Model = VGG19(weights="imagenet",include_top=False,input_shape=(224,224,3))
 
-    notMyModel(vgg16Model,inputs,labels,test_data)
-
-
-
-    # last = vgg16Model.output
-    # x = Flatten()(last)
-    # #preds = model.add(Dense(units=8, activation='softmax')) 
-
-    # x = Dense(224, activation='relu')(x)
-    # preds = Dense(8, activation='softmax')(x)
-    # model = Model(inputs=vgg16Model.input, outputs=preds)
-    #print(last)
-    
-
-    #runModel(conv2D,inputs,labels)
-    # print('test me')
-    # print(model.summary())
-    #prediction = newModel.predict(inputs)
-    # label =  decode_predictions(prediction)
-    # label = label[0][0]
-    #print('Predicted:', decode_predictions(prediction, top=3)[0])
-    #print('%s (%.2f%%)' % (label[1], label[2]*100))
-
-    #runModel(vgg16model,inputs,labels)
-    
-
-    #print("prediction" + new.predict(np.array(x[0])))
+    notMyVgg16Model = notMyModel(vgg16Model,inputs,labels,test_data)
+    notMyResNetModel = notMyModel(resNetModel,inputs,labels,test_data)
+    notMyVgg19Model = notMyModel(vgg19Model,inputs,labels,test_data)
     
 
 
+     #run and save model 
+    runModel(notMyVgg16Model,inputs,labels,test_data) 
+    saveModel(notMyVgg16Model,"saved_vgg16")
+
+    runModel(notMyResNetModel,inputs,labels,test_data) 
+    saveModel(notMyResNetModel,"saved_resNet")
+
+    runModel(notMyVgg19Model,inputs,labels,test_data) 
+    saveModel(notMyVgg19Model,"saved_vgg19")
+
+    runModel(conv2DModel,inputs,labels,test_data) 
+    saveModel(conv2DModel,"saved_conv2D")
+
+    #loadModel("saved_vgg16",inputs,labels)
+
+    
 main()
