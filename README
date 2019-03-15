@@ -8,6 +8,6 @@ pip install Pillow
 pip install opencv-python
 pip install keras
 pip install tensorflow
-source activate emotion_research
+source activate local: emotion_detection hpc: emotion_research
 source deactivate
 
