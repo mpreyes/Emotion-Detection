@@ -78,8 +78,7 @@ def resizeImages(img_files,x,y):
 def inputDataSummary(inputs,labels):
     print(np.shape(inputs))
     print(np.shape(labels))
-    #print(inputs)
-    #print(labels)
+
     
 
 def sequentialModel():
