@@ -93,7 +93,7 @@ def sequentialModel():
 #increase img size 224 * 224, scale and divide by 256
 
 #TODO: fix this boi
-def conv2DModel(): #add dropout layers, 
+def Conv2DModel(): #add dropout layers, 
     model = Sequential()
     model.add(Conv2D(224, kernel_size=(5, 5), strides=(1, 1), activation='relu',data_format = "channels_last",input_shape=(224, 224, 3)))
     model.add(MaxPooling2D(pool_size=(2, 2), strides=(2, 2)))
@@ -154,7 +154,7 @@ def runModel(model, inputs, labels, test_data):
     filepath="../saved/weights-improvement-{epoch:02d}.hdf5"
     checkpoint = ModelCheckpoint(filepath, verbose=1,period=1)
     callbacks_list = [checkpoint]
-    model.fit(inputs, labels, epochs=1, batch_size=32, shuffle=True, callbacks=callbacks_list) #TODO: set to 500
+    model.fit(inputs, labels,validation_split=0.25, epochs=20, batch_size=32, shuffle=True, callbacks=callbacks_list) #TODO: set to 500
     model.summary()
     score = model.evaluate(inputs, labels, verbose=0)
     print('Test loss:', score[0])
@@ -184,10 +184,10 @@ def notMyModel(model,inputs,labels,test_data):
 
 
 def main():
-    # imgs_dir = "../inputs/cohn-kanade-images/"
-    # labels_dir = "../inputs/Emotion/"
-    imgs_dir = "../subset_images/cohn-kanade-images/"
-    labels_dir = "../subset_images/Emotion/"
+    imgs_dir = "../inputs/cohn-kanade-images/"
+    labels_dir = "../inputs/Emotion/"
+    #imgs_dir = "../subset_images/cohn-kanade-images/"
+    #labels_dir = "../subset_images/Emotion/"
     x = [] #inputs (images)
     y = [] #labels 
     labels = getLabels(labels_dir,".txt")
@@ -203,7 +203,7 @@ def main():
     inputDataSummary(x,y)
 
 
-    conv2D = conv2DModel()
+    conv2DModel = Conv2DModel()
     vgg16Model = VGG16(weights="imagenet",include_top=False,input_shape=(224,224,3))
     resNetModel = ResNet50(weights="imagenet",include_top=False,input_shape=(224,224,3))
     vgg19Model = VGG19(weights="imagenet",include_top=False,input_shape=(224,224,3))
@@ -215,14 +215,14 @@ def main():
 
 
      #run and save model 
-    runModel(notMyVgg16Model,inputs,labels,test_data) 
-    saveModel(notMyVgg16Model,"saved_vgg16")
+    #runModel(notMyVgg16Model,inputs,labels,test_data) 
+    #saveModel(notMyVgg16Model,"saved_vgg16")
 
-    runModel(notMyResNetModel,inputs,labels,test_data) 
-    saveModel(notMyResNetModel,"saved_resNet")
+    #runModel(notMyResNetModel,inputs,labels,test_data) 
+    #saveModel(notMyResNetModel,"saved_resNet")
 
-    runModel(notMyVgg19Model,inputs,labels,test_data) 
-    saveModel(notMyVgg19Model,"saved_vgg19")
+    #runModel(notMyVgg19Model,inputs,labels,test_data) 
+    #saveModel(notMyVgg19Model,"saved_vgg19")
 
     runModel(conv2DModel,inputs,labels,test_data) 
     saveModel(conv2DModel,"saved_conv2D")
