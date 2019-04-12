@@ -1,7 +1,7 @@
 
 
 
-install conda
+install conda, create an environment 
 
 pip install numpy
 pip install Pillow
@@ -11,3 +11,8 @@ pip install tensorflow
 source activate local: emotion_detection hpc: emotion_research
 source deactivate
 
+other libraries:
+scikit-learn
+
+
+reasearch.py is the main driver for all the code.
